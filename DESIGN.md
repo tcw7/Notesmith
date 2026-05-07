@@ -1,8 +1,16 @@
-# Notefolio — Design Document
+# Notesmith — Design Document
 
 **Status:** Pre-implementation  
 **Author:** Tyler Wennstrom  
 **Last updated:** 2026-05-06
+
+---
+
+## Inspiration
+
+Notesmith is a ground-up Swift rewrite inspired by **[notes-exporter](https://github.com/tcw7/notes-exporter-fork)**, an AppleScript-based Apple Notes exporter that pioneered many of the ideas here: incremental exports, JSON tracking per notebook, bidirectional sync, batch Apple Event fetching, and AI-powered search.
+
+The AppleScript implementation proved the concept and identified the real bottlenecks. Notesmith exists to push past the limits of what AppleScript can do — not to replace it, but to honor it by taking its ideas as far as they can go.
 
 ---
 
@@ -26,7 +34,7 @@
 
 ## 1. Vision & Goals
 
-Notefolio is a high-performance Apple Notes exporter and bidirectional sync engine, written in Swift. It aims to be the fastest possible bridge between Apple Notes and the filesystem, targeting both power users and a future consumer Mac app.
+Notesmith is a high-performance Apple Notes exporter and bidirectional sync engine, written in Swift. It aims to be the fastest possible bridge between Apple Notes and the filesystem, targeting both power users and a future consumer Mac app.
 
 ### Goals
 
@@ -99,7 +107,7 @@ For 172 folders: `3 + 1,032 = 1,035 AEs × 20ms = ~21 seconds`
 |---|---|---|
 | Incremental, 0 changes | 41s | <10s |
 | Incremental, 10 changes | ~45s | <12s |
-| Full export, 875 notes | ~7 min | <45s |
+| Full export, 1,000 notes | ~7 min | <45s |
 | Full export, 5,000 notes | ~35 min (est.) | <3 min |
 
 ---
@@ -108,7 +116,7 @@ For 172 folders: `3 + 1,032 = 1,035 AEs × 20ms = ~21 seconds`
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                         notefolio CLI                           │
+│                         notesmith CLI                           │
 │                     (ArgumentParser)                            │
 └──────────────────────────┬──────────────────────────────────────┘
                            │
@@ -147,10 +155,10 @@ For 172 folders: `3 + 1,032 = 1,035 AEs × 20ms = ~21 seconds`
 ### Package Structure
 
 ```
-notefolio/
+Notesmith/
 ├── Package.swift
 ├── Sources/
-│   └── notefolio/
+│   └── notesmith/
 │       ├── main.swift                  # Entry point, CLI setup
 │       ├── CLI/
 │       │   ├── ExportCommand.swift
@@ -177,7 +185,7 @@ notefolio/
 │           ├── Logger.swift
 │           └── StringExtensions.swift
 ├── Tests/
-│   └── notefolioTests/
+│   └── NotesmithTests/
 │       ├── ExportEngineTests.swift
 │       ├── DataStoreTests.swift
 │       ├── FilenameGeneratorTests.swift
@@ -194,7 +202,7 @@ notefolio/
 ScriptingBridge generates a Swift-compatible Objective-C header from Notes.app's SDEF:
 
 ```bash
-sdef /Applications/Notes.app | sdp -fh --basename Notes -o Sources/notefolio/Notes/
+sdef /Applications/Notes.app | sdp -fh --basename Notes -o Sources/notesmith/Notes/
 ```
 
 This produces `Notes.h`, which is imported via a bridging header or as a module. The generated header exposes `NotesApplication`, `NotesAccount`, `NotesFolder`, `NotesNote` as `SBObject` subclasses.
@@ -388,7 +396,7 @@ struct ExportConfig {
     var filenameFormat: String = "{title}"
     var subdirFormat: String = "{account}/{folder}"
     var includeDeletedInTracking: Bool = false
-    var scriptDirectory: URL                // Location of notefolio binary, for resolving data paths
+    var scriptDirectory: URL                // Location of notesmith binary, for resolving data paths
 }
 ```
 
@@ -678,7 +686,7 @@ Built with [Swift ArgumentParser](https://github.com/apple/swift-argument-parser
 ### Subcommands
 
 ```
-notefolio <subcommand>
+notesmith <subcommand>
 
 Subcommands:
   export    Export notes from Apple Notes to the filesystem
@@ -690,7 +698,7 @@ Subcommands:
 ### `export` Options
 
 ```
-USAGE: notefolio export [<options>] <output-directory>
+USAGE: notesmith export [<options>] <output-directory>
 
 ARGUMENTS:
   <output-directory>    Root directory for exported files
@@ -718,23 +726,23 @@ OPTIONS:
 All options can also be set via environment variables (CLI args take precedence):
 
 ```
-NOTEFOLIO_OUTPUT_DIR
-NOTEFOLIO_DATA_DIR
-NOTEFOLIO_UPDATE_ALL
-NOTEFOLIO_FILTER_ACCOUNTS
-NOTEFOLIO_FILTER_FOLDERS
-NOTEFOLIO_NOTE_LIMIT
-NOTEFOLIO_PER_FOLDER_LIMIT
-NOTEFOLIO_MODIFIED_AFTER
-NOTEFOLIO_PROBABILITY
-NOTEFOLIO_USE_SUBDIRS
-NOTEFOLIO_FILENAME_FORMAT
-NOTEFOLIO_SUBDIR_FORMAT
+NOTESMITH_OUTPUT_DIR
+NOTESMITH_DATA_DIR
+NOTESMITH_UPDATE_ALL
+NOTESMITH_FILTER_ACCOUNTS
+NOTESMITH_FILTER_FOLDERS
+NOTESMITH_NOTE_LIMIT
+NOTESMITH_PER_FOLDER_LIMIT
+NOTESMITH_MODIFIED_AFTER
+NOTESMITH_PROBABILITY
+NOTESMITH_USE_SUBDIRS
+NOTESMITH_FILENAME_FORMAT
+NOTESMITH_SUBDIR_FORMAT
 ```
 
 ### Output Format
 
-Progress is written to stderr; structured output (stats JSON) is written to stdout on completion. This allows `notefolio export ... > stats.json` to capture the report.
+Progress is written to stderr; structured output (stats JSON) is written to stdout on completion. This allows `notesmith export ... > stats.json` to capture the report.
 
 ```
 [12:00:01] Loading 129 existing notebook files...
@@ -845,12 +853,12 @@ enum FileWriterError: Error {
 Apple Notes requires the user to grant the tool automation access. On first run, if access is denied:
 
 ```
-Error: notefolio does not have permission to access Notes.
+Error: notesmith does not have permission to access Notes.
 
 Grant access in:
-  System Settings → Privacy & Security → Automation → notefolio → Notes ✓
+  System Settings → Privacy & Security → Automation → notesmith → Notes ✓
 
-Then re-run notefolio.
+Then re-run notesmith.
 ```
 
 Detection: Catch the NSError with domain `com.apple.AppleEventsErrorDomain` code `-1743` (not authorized).
@@ -887,7 +895,7 @@ struct MockNotesClient: NotesClientProtocol {
 
 ### Integration Tests (requires Notes.app, marked with `.integration` tag)
 
-A small test notebook "Notefolio Test Notebook" with known content is used for integration tests. These are excluded from CI but run locally before releases.
+A small test notebook "Notesmith Test Notebook" with known content is used for integration tests. These are excluded from CI but run locally before releases.
 
 ### Performance Benchmarks
 
@@ -902,7 +910,7 @@ Use `XCTestCase.measure` to track regressions in hot paths:
 
 ### Config File
 
-Optional `~/.config/notefolio/config.json` for persistent defaults:
+Optional `~/.config/notesmith/config.json` for persistent defaults:
 
 ```json
 {
@@ -987,14 +995,14 @@ The subdirectory format determines the JSON filename: `{account}-{folder}.json` 
 - [ ] `ExportEngine` with incremental logic
 - [ ] `FileWriter` with rename/delete handling
 - [ ] `FilenameGenerator` with all format tokens
-- [ ] `notefolio export` CLI subcommand
+- [ ] `notesmith export` CLI subcommand
 - [ ] Compatibility with existing `data/*.json` files from AppleScript exporter
 - [ ] Unit tests for all modules
 - [ ] Performance: incremental <10s, full <45s for 875 notes
 
 ### Phase 2: Observability & Polish
 
-- [ ] `notefolio stats` subcommand with per-folder breakdown
+- [ ] `notesmith stats` subcommand with per-folder breakdown
 - [ ] `--verbose` mode with per-note logging
 - [ ] Machine-readable JSON stats output (`--json`)
 - [ ] launchd plist for scheduled background exports
@@ -1004,10 +1012,10 @@ The subdirectory format determines the JSON filename: `{account}-{folder}.json` 
 
 **Goal:** Full-text search over exported notes without re-reading files.
 
-- [ ] SQLite database alongside data directory (`notefolio.db`)
+- [ ] SQLite database alongside data directory (`notesmith.db`)
 - [ ] FTS5 virtual table over note content
 - [ ] Index is updated incrementally alongside exports
-- [ ] `notefolio query "text"` subcommand
+- [ ] `notesmith query "text"` subcommand
 - [ ] Returns matching note titles + file paths
 
 ### Phase 4: AI Search
@@ -1016,7 +1024,7 @@ The subdirectory format determines the JSON filename: `{account}-{folder}.json` 
 
 - [ ] Embedding generation via local model (e.g., via `llm` CLI or CoreML model)
 - [ ] Embedding stored per note in SQLite BLOB column
-- [ ] `notefolio query --semantic "what was that thing about..."` subcommand
+- [ ] `notesmith query --semantic "what was that thing about..."` subcommand
 - [ ] Optional: OpenAI/Anthropic API for embedding generation
 
 ### Phase 5: Bidirectional Sync
@@ -1027,7 +1035,7 @@ The subdirectory format determines the JSON filename: `{account}-{folder}.json` 
 - [ ] Detect which exported file changed (diff against last known content)
 - [ ] Write back via `tell application "Notes" to set body of note ... to ...`
 - [ ] Conflict resolution: Notes.app timestamp vs filesystem mtime
-- [ ] `notefolio sync` subcommand (long-running daemon mode)
+- [ ] `notesmith sync` subcommand (long-running daemon mode)
 
 ### Phase 6: Mac App (SwiftUI)
 
@@ -1089,7 +1097,7 @@ Notes Suite:
 
 ## Appendix C: Compatibility with AppleScript Data Files
 
-The `notefolio` JSON schema is a strict superset of the AppleScript exporter format. Migration is automatic on first run: the DataStore decoder reads the old pipe-delimited fields if present and upgrades to the typed Codable format.
+The Notesmith JSON schema is a strict superset of the notes-exporter format. Migration is automatic on first run: the DataStore decoder reads the old pipe-delimited fields if present and upgrades to the typed Codable format.
 
 Old format (written by AppleScript):
 ```json
@@ -1106,7 +1114,7 @@ Old format (written by AppleScript):
 }
 ```
 
-New format (Notefolio Codable):
+New format (Notesmith Codable):
 ```json
 {
   "version": 1,

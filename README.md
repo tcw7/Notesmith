@@ -11,9 +11,15 @@ A high-performance Apple Notes exporter and sync engine, written in Swift.
 - Zero shell forks — native Swift file I/O and JSON throughout
 - Foundation for a Mac app, bidirectional sync, and AI search
 
+## Inspired by notes-exporter
+
+Notesmith stands on the shoulders of **[notes-exporter](https://github.com/tcw7/notes-exporter-fork)**, an AppleScript tool that pioneered incremental exports, per-notebook JSON tracking, bidirectional sync, and AI search for Apple Notes. It proved the concept and mapped the bottlenecks.
+
+Notesmith is a Swift rewrite built to push past what AppleScript can do — same ideas, no interpreter ceiling.
+
 ## Why Swift?
 
-The predecessor ([notes-exporter](https://github.com/tcw7/notes-exporter-fork)) was written in AppleScript and took 41 seconds for an incremental run with no changes. The bottleneck was AppleScript interpreter overhead on top of Apple Events — not the Apple Events themselves.
+notes-exporter took 41 seconds for an incremental run with no changes. The bottleneck was AppleScript interpreter overhead on top of Apple Events — not the Apple Events themselves.
 
 Swift + ScriptingBridge sends the same Apple Events to Notes.app but eliminates all per-iteration interpreter overhead, shell forks (Python for JSON, `mkdir`, `date`), and O(N²) string/list patterns.
 
