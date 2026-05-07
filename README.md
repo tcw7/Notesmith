@@ -13,7 +13,7 @@ A high-performance Apple Notes exporter and sync engine, written in Swift.
 
 ## Inspired by notes-exporter
 
-Notesmith stands on the shoulders of **[notes-exporter](https://github.com/tcw7/notes-exporter-fork)**, an AppleScript tool that pioneered incremental exports, per-notebook JSON tracking, bidirectional sync, and AI search for Apple Notes. It proved the concept and mapped the bottlenecks.
+Notesmith stands on the shoulders of **[notes-exporter](https://github.com/storizzi/notes-exporter)**, an AppleScript tool that pioneered incremental exports, per-notebook JSON tracking, bidirectional sync, and AI search for Apple Notes. It proved the concept and mapped the bottlenecks.
 
 Notesmith is a Swift rewrite built to push past what AppleScript can do — same ideas, no interpreter ceiling.
 

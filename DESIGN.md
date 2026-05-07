@@ -8,7 +8,7 @@
 
 ## Inspiration
 
-Notesmith is a ground-up Swift rewrite inspired by **[notes-exporter](https://github.com/tcw7/notes-exporter-fork)**, an AppleScript-based Apple Notes exporter that pioneered many of the ideas here: incremental exports, JSON tracking per notebook, bidirectional sync, batch Apple Event fetching, and AI-powered search.
+Notesmith is a ground-up Swift rewrite inspired by **[notes-exporter](https://github.com/storizzi/notes-exporter)**, an AppleScript-based Apple Notes exporter that pioneered many of the ideas here: incremental exports, JSON tracking per notebook, bidirectional sync, batch Apple Event fetching, and AI-powered search.
 
 The AppleScript implementation proved the concept and identified the real bottlenecks. Notesmith exists to push past the limits of what AppleScript can do — not to replace it, but to honor it by taking its ideas as far as they can go.
 
